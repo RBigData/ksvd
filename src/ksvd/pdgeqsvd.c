@@ -1,0 +1,476 @@
+/**
+ *
+ * Copyright (c) 2017, King Abdullah University of Science and Technology
+ * All rights reserved.
+ *
+ **/
+
+/**
+ *
+ * @file pdgesvd.c
+ *
+ *  KSVD is a high performance software framework for computing 
+ *  a dense SVD on distributed-memory manycore systems provided by KAUST
+ *
+ * @version 1.0.0
+ * @author Dalal Sukkari
+ * @author Hatem Ltaief
+ * @date 2017-11-13
+ *
+ **/
+
+#include "common.h"
+
+#ifndef max
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#endif
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
+ /*******************************************************************************
+ *  .. Scalar Arguments ..
+ *  INTEGER            IA, INFO, JA, LWORK, M, N
+ *   ..
+ *  .. Array Arguments ..
+ *  INTEGER            DESCA( * )
+    DOUBLE PRECISION   A( * ), TAU( * ), WORK( * )
+ *     ..
+ *
+ *  Purpose
+ *  =======
+ *  
+ *  PDGSVD computes the SVD of a real distributed M-by-N based
+ *  on the polar decomposition QDWH
+ *
+ *  matrix A = U * Sigma * VT.
+ *
+ *  Notes
+ *  =====
+ *
+ *  Each global data object is described by an associated description
+ *  vector.  This vector stores the information required to establish
+ *  the mapping between an object element and its corresponding process
+ *  and memory location.
+ *
+ *  Let A be a generic term for any 2D block cyclicly distributed array.
+ *  Such a global array has an associated description vector DESCA.
+ *  In the following comments, the character _ should be read as
+ *  "of the global array".
+ *
+ *  NOTATION        STORED IN      EXPLANATION
+ *
+ *  NOTATION        STORED IN      EXPLANATION
+ *  --------------- -------------- --------------------------------------
+ *  DTYPE_A(global) DESCA( DTYPE_ )The descriptor type.  In this case,
+ *                                 DTYPE_A = 1.
+ *  CTXT_A (global) DESCA( CTXT_ ) The BLACS context handle, indicating
+ *                                 the BLACS process grid A is distribu-
+ *                                 ted over. The context itself is glo-
+ *                                 bal, but the handle (the integer
+ *                                 value) may vary.
+ *  M_A    (global) DESCA( M_ )    The number of rows in the global
+ *                                 array A.
+ *  N_A    (global) DESCA( N_ )    The number of columns in the global
+ *                                 array A.
+ *  MB_A   (global) DESCA( MB_ )   The blocking factor used to distribute
+ *                                 the rows of the array.
+ *  NB_A   (global) DESCA( NB_ )   The blocking factor used to distribute
+ *                                 the columns of the array.
+ *  RSRC_A (global) DESCA( RSRC_ ) The process row over which the first
+ *                                 row of the array A is distributed.
+ *  CSRC_A (global) DESCA( CSRC_ ) The process column over which the
+ *                                 first column of the array A is
+ *                                 distributed.
+ *  LLD_A  (local)  DESCA( LLD_ )  The leading dimension of the local
+ *                                 array.  LLD_A >= MAX(1,LOCr(M_A)).
+ *
+ *  Let K be the number of rows or columns of a distributed matrix,
+ *  and assume that its process grid has dimension p x q.
+ *  LOCr( K ) denotes the number of elements of K that a process
+ *  would receive if K were distributed over the p processes of its
+ *  process column.
+ *  Similarly, LOCc( K ) denotes the number of elements of K that a
+ *  process would receive if K were distributed over the q processes of
+ *  its process row.
+ *  The values of LOCr() and LOCc() may be determined via a call to the
+ *  ScaLAPACK tool function, NUMROC:
+ *          LOCr( M ) = NUMROC( M, MB_A, MYROW, RSRC_A, NPROW ),
+ *          LOCc( N ) = NUMROC( N, NB_A, MYCOL, CSRC_A, NPCOL ).
+ *  An upper bound for these quantities may be computed by:
+ *          LOCr( M ) <= ceil( ceil(M/MB_A)/NPROW )*MB_A
+ *          LOCc( N ) <= ceil( ceil(N/NB_A)/NPCOL )*NB_A
+ *
+ *  Arguments
+ *************
+ * JOBU    (global input) CHARACTER*1
+ *          Specifies options for computing U:
+ *          = 'V':  the first SIZE columns of U (the left singular
+ *                  vectors) are returned in the array U;
+ *          = 'N':  no columns of U (no left singular vectors) are
+ *                  computed.
+ *
+ * JOBVT   (global input) CHARACTER*1
+ *          Specifies options for computing U:
+ *          = 'V':  the first SIZE columns of V (the right singular
+ *                  vectors) are returned in the array VT;
+ *          = 'N':  no columns of VT (no right singular vectors) are
+ *                  computed.
+ *
+ * eigtype  (global input) CHARACTER*1
+ *          Specifies the eigensolver to be used after the polar decomposition:
+ *          = 'r': Use PDSYEVR 
+ *          = 'd': Use PDSYEVD 
+ *          = 'e': Use ELPA-2stage 
+ *
+ *  M       (global input) INTEGER
+ *          The number of rows of the input matrix A.  M >= 0.
+ *
+ *  N       (global input) INTEGER
+ *          The number of columns of the input matrix A.  N >= 0.
+ *
+ *  A       (local input/workspace) block cyclic DOUBLE PRECISION
+ *          array,
+ *          global dimension (M, N), local dimension (MP, NQ)
+ *          On exit, the contents of A are destroyed.
+ *
+ *  IA      (global input) INTEGER
+ *          The row index in the global array A indicating the first
+ *          row of sub( A ).
+ *
+ *  JA      (global input) INTEGER
+ *          The column index in the global array A indicating the
+ *          first column of sub( A ).
+ *
+ *  DESCA   (global input) INTEGER array of dimension DLEN_
+ *          The array descriptor for the distributed matrix A.
+ *
+ *  S       (global output) DOUBLE PRECISION   array, dimension SIZE
+ *          The singular values of A, sorted so that S(i) >= S(i+1).
+ *
+ *  U       (local output) DOUBLE PRECISION   array, local dimension
+ *          (MP, SIZEQ), global dimension (M, SIZE)
+ *          if JOBU = 'V', U contains the first min(m,n) columns of U
+ *          if JOBU = 'N', U is not referenced.
+ *
+ *  IU      (global input) INTEGER
+ *          The row index in the global array U indicating the first
+ *          row of sub( U ).
+ *
+ *  JU      (global input) INTEGER
+ *          The column index in the global array U indicating the
+ *          first column of sub( U ).
+ *
+ *  DESCU   (global input) INTEGER array of dimension DLEN_
+ *          The array descriptor for the distributed matrix U.
+ *
+ *  VT      (local output) DOUBLE PRECISION   array, local dimension
+ *          (SIZEP, NQ), global dimension (SIZE, N).
+ *          If JOBVT = 'V', VT contains the first SIZE rows of
+ *          V**T. If JOBVT = 'N', VT is not referenced.
+ *
+ *  IVT     (global input) INTEGER
+ *          The row index in the global array VT indicating the first
+ *          row of sub( VT ).
+ *
+ *  JVT     (global input) INTEGER
+ *          The column index in the global array VT indicating the
+ *          first column of sub( VT ).
+ *
+ *  DESCVT   (global input) INTEGER array of dimension DLEN_
+ *          The array descriptor for the distributed matrix VT.
+ *
+ *  WORK    (local workspace/output) DOUBLE PRECISION   array, dimension
+ *          (LWORK)
+ *          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+ *
+ *  LWORK   (local input) INTEGER
+ *          The dimension of the array WORK.
+ *  if eigtype == 'r' then
+ *  LWORK   (local input) INTEGER
+ *          Size of WORK, must be at least 3.
+ *          See below for definitions of variables used to define LWORK.
+ *          If no eigenvectors are requested (JOBZ = 'N') then
+ *             LWORK >= max(2 + 5*N + MAX( 12 * NN, NB * ( NP0 + 1 ) ), LOCrW*LOCc)
+ *          If eigenvectors are requested (JOBZ = 'V' ) then
+ *             the amount of workspace required is:
+ *             LWORK >= max(2 + 5*N + MAX( 18*NN, NP0 * MQ0 + 2 * NB * NB ) +
+ *               (2 + ICEIL( NEIG, NPROW*NPCOL))*NN, LOCrW*LOCc)
+ *
+ *  if eigtype == 'd' then
+ *  LWORK   (local input) INTEGER
+ *          LWORK >= MAX( 1+6*N+2*NP*NQ, TRILWMIN ) + 2*N
+ *          TRILWMIN = 3*N + MAX( NB*( NP+1 ), 3*NB )
+ *          NP = NUMROC( N, NB, MYROW, IAROW, NPROW )
+ *          NQ = NUMROC( N, NB, MYCOL, IACOL, NPCOL )
+ *          LWORK >= max(1 + 6*SIZEB + MAX(WATOBD, WBDTOSVD), LOCrW*LOCc)
+ *
+ *          If LWORK = -1, then LWORK is global input and a workspace
+ *          query is assumed; the routine only calculates the minimum
+ *          size for the work array. The required workspace is returned
+ *          as the first element of WORK and no error message is issued
+ *          by PXERBLA.
+ *          Where, MLOCW is 
+ *          LOCrW( M ) = NUMROC( 2*M, MB_A, MYROW, RSRC_A, NPROW ),
+ *
+ *
+ *  if eigtype == 'd' then
+ *  The WORK is NULL and not referenced
+ *
+ *  IWLOC   (local workspace/output) INTEGER array, dimension (LIWORK)
+ *          On exit, if LIWORK > 0, IWORK(1) returns the optimal LIWORK.
+ *
+ *  LIWORK  (input) INTEGER
+ *          The dimension of the array IWORK.
+ *          PDGETRF_LIWORK = ( LOCr(M_A)+MB_A )
+ *          PDGECON_LIWORK >= MAX( 1, LOCr(N+MOD(IA-1,MB_A)) ).
+ *          Let  NNP = MAX( N, NPROW*NPCOL + 1, 4 ). Then:
+ *          PDSYEVR_LIWORK >= 12*NNP + 2*N when the eigenvectors are desired
+ *          PDSYEVR_LIWORK >= 10*NNP + 2*N when only the eigenvalues have to be computed
+ *          PDSYEVD_LIWORK = 7*N + 8*NPCOL + 2. 
+ *          LIWORK = MAX(PDGETRF_LIWORK, PDGECON_LIWORK , EIGTYPE_LIWORK ) 
+ *
+ *          If LIWORK = -1, then LIWORK is global input and a workspace
+ *          query is assumed; the routine only calculates the minimum
+ *          and optimal size for all work arrays. Each of these
+ *          values is returned in the first entry of the corresponding
+ *          work array, and no error message is issued by PXERBLA.
+ *
+ *  INFO    (output) INTEGER
+ *          = 0:  successful exit
+ *          < 0:  If the i-th argument is an array and the j-entry had
+ *                an illegal value, then INFO = -(i*100+j), if the i-th
+ *                argument is a scalar and had an illegal value, then
+ *                INFO = -i.
+ *
+ ******************************************************************************/
+
+
+int pdgeqsvd( char *jobu, char *jobvt, char *eigtype, 
+              int m, int n, 
+              double *A, int iA, int jA, int *descA, 
+              double *S, 
+              double *U,     int iU,     int jU, int *descU,
+              double *VT,    int iVT,    int jVT, int *descVT,
+              double *Work,  int lWork,
+              int    *iWork, int liWork, int *info)
+{
+
+    int verbose = 0; int profqw = 0; int optcond = 0;
+    int vl, vu, il, iu, nbeigvals, nbeigvecs;
+    double flops, GFLOPS;
+    flops = 0.0;
+    int iinfo;
+
+    int i0 = 0;
+    int i1 = 1;
+
+    int mloc, nloc, mlocW, nb;   
+    int myrow, mycol, nprow, npcol;   
+    int ctxt_ = 1, nb_ = 5;
+    int ictxt;
+    int MB = 2*n; 
+           
+    /*
+     * Get the grid parameters
+     */
+    ictxt = descU[ctxt_];
+    Cblacs_get( -1, 0, &ictxt );
+    nb = descU[nb_];
+    Cblacs_gridinfo( ictxt, &nprow, &npcol, &myrow, &mycol );
+    mloc  = numroc_( &m, &nb, &myrow, &i0, &nprow );
+    nloc  = numroc_( &n, &nb, &mycol, &i0, &npcol );
+    mlocW = numroc_( &MB, &nb, &myrow, &i0, &nprow );
+
+    double alpha = 1.0, beta = 0.0;
+    int lwork_cn, liwork_cn;
+
+    int lmin, limin, lquery;
+    *info = 0; 
+    lquery =  (lWork == -1 || liWork == -1); 
+    int wantU = 0, wantV = 0;
+
+   /*
+    * Test the input parameters
+    */
+
+    if( nprow == -1 ){
+        *info = -(900+ctxt_);
+    }
+    else { 
+        if (jobu[0] == 'V' || jobu[0] == 'v'){
+            wantU = 1;
+        }
+        if (jobvt[0] == 'V' || jobvt[0] == 'v'){
+            wantV = 1;
+        }
+       int i3 = 3, i4 = 4, i5 = 5, i9 = 9, i14 = 14, i18 = 18, i_1 = -1;
+       int *idum1, *idum2;
+       idum1 = (int *)malloc(3*sizeof(int)) ;
+       idum2 = (int *)malloc(3*sizeof(int)) ;
+       chk1mat_(&m, &i4, &n, &i5, &iA, &jA, descA, &i9, info);
+       if (wantU){
+          chk1mat_(&m, &i4, &n, &i5, &iU, &jU, descU, &i14, info);
+       }
+       if (wantV){
+          chk1mat_(&m, &i4, &n, &i5, &iVT, &jVT, descVT, &i18, info);
+       }
+
+       lquery =  (lWork == -1 || liWork == -1); 
+       if (*info == 0){
+           double Anorm = 1., Li = 1.;
+           //lwork_cn = -1; liwork_cn = -1;
+
+           //lwork_cn  = Work[0];
+           liwork_cn = n;//(int)iWork[0];
+           if (eigtype[0] == 'r') {
+               pdsyevr_( jobvt, "A", "L", &n, 
+                     U, &iU, &jU, descU, 
+                     &vl, &vu, &il, &iu, &nbeigvals, &nbeigvecs,
+                     S, 
+                     VT, &iVT, &jVT, descVT, 
+                     Work, &lWork, 
+                     iWork, &liWork, &iinfo );
+           }   
+           else if (eigtype[0] == 'd') {
+               pdsyevd_( jobvt, "L", &n, 
+                     U, &iU, &jU, descU, 
+                     S, 
+                     VT, &iVT, &jVT, descVT, 
+                     Work, &lWork, 
+                     iWork, &liWork, &iinfo );
+           }   
+           lmin  = max ( Work[0], mlocW*nloc);
+           limin = max ( (int)iWork[0], liwork_cn);
+           Work[0]  = lmin;
+           iWork[0] = limin;
+           if( (lWork < lmin) & !lquery ){
+               *info = -20;
+           }
+           if( (liWork < limin) & !lquery ){
+               *info = -22;
+           }
+       }
+       idum1[0] = wantU;
+       idum1[1] = wantV;
+       if( lWork == -1 || liWork == -1) {
+             idum1[2] = -1;
+       }
+       else {
+             idum1[2] =  1;
+       }
+       idum2[0] =  1;
+       idum2[1] =  2;
+       idum2[2] =  22;
+       pchk1mat_( &m, &i4, &n, &i5, &iA, &jA, descA, &i9, &i3, &idum1, &idum2,
+                        info );
+       if ((*info == 0) && wantU){
+          pchk1mat_( &m, &i4, &n, &i5, &iU, &jU, descU, &i14, &i0, &idum1, &idum2,
+                         info );
+       }
+       if ((*info == 0) && wantV){
+          pchk1mat_( &m, &i4, &n, &i5, &iVT, &jVT, descVT, &i18, &i0, &idum1, &idum2,
+                         info );
+       }
+    }
+
+   if( *info != 0 ){
+       pxerbla_( ictxt, "PDGEQSVD", -1*info[0] ); 
+       return 0;
+   }
+   else if ( lquery ){
+       /*
+        * Find Workspace 
+        */
+        double Anorm = 1., Li = 1.;
+        lwork_cn = -1; liwork_cn = -1;
+        lWork = -1; liWork = -1;
+        pdgecon_ ("1", &n, U, &iU, &jU, descU, 
+                  &Anorm, &Li, 
+                  Work, &lwork_cn, iWork, &liwork_cn, &iinfo);
+        liwork_cn = n;//(int)iWork[0];
+        lwork_cn  = Work[0];
+        //liwork_cn = (int)iWork[0];
+
+
+        if (eigtype[0] == 'r') {
+            pdsyevr_( jobvt, "A", "L", &n, 
+                  U, &iU, &jU, descU, 
+                  &vl, &vu, &il, &iu, &nbeigvals, &nbeigvecs,
+                  S, 
+                  VT, &iVT, &jVT, descVT, 
+                  Work, &lWork, 
+                  iWork, &liWork, &iinfo );
+        }   
+        else if (eigtype[0] == 'd') {
+            pdsyevd_( jobvt, "L", &n, 
+                  U, &iU, &jU, descU, 
+                  S, 
+                  VT, &iVT, &jVT, descVT, 
+                  Work, &lWork, 
+                  iWork, &liWork, &iinfo );
+        }   
+        //lWork  = max ( Work[0], lwork_cn);
+        lWork  =  max(Work[0], mlocW*nloc);
+        lWork  =  max(lWork, lwork_cn);
+        liWork = max ( (int)iWork[0], liwork_cn);
+        Work[0]  = lWork;
+        iWork[0] = liWork;
+        return 0;
+    }
+    /* Quick return if possible */
+    if ( m == 0 || n == 0 ){
+        return 0;
+    }
+
+    pdgeqdwh( "H", n, n,
+              A, iA, jA, descA, // UP 
+              U, iU, jU, descU, // H 
+              VT, mloc,
+              Work, mlocW,
+              &iinfo);
+
+    if (eigtype[0] == 'r'){
+        pdsyevr_( jobvt, "A", "L", &n, 
+                   U, &iU, &jU, descU, 
+                   &vl, &vu, &il, &iu, &nbeigvals, &nbeigvecs,
+                   S, 
+                   VT, &iVT, &jVT, descVT, 
+                   Work, &lWork, 
+                   iWork, &liWork, &iinfo );
+              
+    }
+    else if(eigtype[0] == 'd'){
+        pdsyevd_( jobvt, "L", &n, 
+                  U, &iU, &jU, descU, 
+                  S, 
+                  VT, &iVT, &jVT, descVT, 
+                  Work, &lWork, 
+                  iWork, &liWork, &iinfo );
+    }
+  //   else if(eigtype[0] == 'e'){
+  //       Cblacs_gridinfo( ictxt, &nprow, &npcol, &myrow, &mycol );
+	// mloc  = numroc_( &n, &nb, &myrow, &i0, &nprow );
+	// nloc  = numroc_( &n, &nb, &mycol, &i0, &npcol );
+  //       int useQr, THIS_REAL_ELPA_KERNEL_API;
+  //       int mpi_comm_rows, mpi_comm_cols;
+  //       int mpierr = elpa_get_communicators(MPI_Comm_c2f(MPI_COMM_WORLD), myrow, mycol, &mpi_comm_rows, &mpi_comm_cols);
+  //       useQr = 0;
+  //       THIS_REAL_ELPA_KERNEL_API = ELPA2_REAL_KERNEL_AVX_BLOCK6;
+  //       *info = elpa_solve_evp_real_2stage( n, n, U, mloc, 
+  //                                           S, VT, 
+  //                                           mloc, nb, nloc, 
+  //                                           mpi_comm_rows, mpi_comm_cols, MPI_Comm_c2f(MPI_COMM_WORLD),
+  //                                           THIS_REAL_ELPA_KERNEL_API, useQr);
+  //   }
+
+    if(jobu == "V") {
+        pdgemm_( "N", "N", &n, &n, &n, 
+                 &alpha, 
+                 A, &iA, &jA, descA, 
+                 VT, &iVT, &jVT, descVT, 
+                 &beta, 
+                 U, &iU, &jU, descU);
+    }
+    return 0;
+}
