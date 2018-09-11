@@ -33,32 +33,33 @@ ksvd = function(x,  nu = min(m, n), nv = min(m, n))
   {
     jobu = 'N'
     dim_u = c(1L, 1L)
+    ldim_u = c(-1L, -1L)
   }
   else
   {
     jobu = 'V'
     dim_u = c(m, min_mn)
+    ldim_u = pbdBASE::base.numroc(dim=dim_u, bldim=bldim, ICTXT=ICTXT)
   }
-  
-  ldim_u = pbdBASE::base.numroc(dim=dim_u, bldim=bldim, ICTXT=ICTXT)
-  descu = pbdBASE::base.descinit(dim_u, bldim, ldim_u, ICTXT)
   
   if (nv == 0)
   {
     jobvt = 'N'
     dim_vt = c(1L, 1L)
+    ldim_vt = c(-1L, -1L)
   }
   else
   {
     jobvt = 'V'
-    vtdim = c(minmn, n)
+    vtdim = c(min_mn, n)
+    ldim_vt = pbdBASE::base.numroc(dim=dim_vt, bldim=bldim, ICTXT=ICTXT)
   }
   
-  ldim_vt = pbdBASE::base.numroc(dim=dim_vt, bldim=bldim, ICTXT=ICTXT)
+  descu = pbdBASE::base.descinit(dim_u, bldim, ldim_u, ICTXT)
   descvt = pbdBASE::base.descinit(dim_vt, bldim, ldim_vt, ICTXT)
   
   
-  out = rpdgeqsvd(jobu, jobvt, x@Data, desca, descu, descvt)
+  out = rpdgeqsvd(jobu, jobvt, eigtype='D', x@Data, desca, descu, descvt)
   
   
   if (nu > 0)

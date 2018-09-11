@@ -18,7 +18,19 @@
 #' TODO
 #' 
 #' @export
-rpdgeqsvd = function(jobu, jobvt, A, desca, descu, descvt)
+rpdgeqsvd = function(jobu, jobvt, eigtype, A, desca, descu, descvt)
 {
-  .Call("R_pdgeqsvd", jobu, jobvt, A, desca, descu, descvt)
+  if (jobu == 'V' || jobu == 'v')
+    ldim_u = base.numroc(descu[3:4], descu[5:6], ICTXT=descu[2L])
+  else
+    ldim_u = c(-1L, -1L)
+  
+  if (jobvt == 'V' || jobvt == 'v')
+    ldim_vt = base.numroc(descvt[3:4], descvt[5:6], ICTXT=descvt[2L])
+  else
+    ldim_vt = c(-1L, -1L)
+  
+  
+  ldim_vt = base.numroc(descvt[3:4], descvt[5:6], ICTXT=descvt[2L])
+  .Call("R_pdgeqsvd", jobu, jobvt, eigtype, A, desca, descu, descvt, ldim_u, ldim_vt)
 }

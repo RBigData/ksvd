@@ -3,7 +3,7 @@
 
 #define CHARPT(x,i) ((char*)CHAR(STRING_ELT(x,i)))
 #define FREE(x) (if(x)free(x))
-
+#define MIN(a,b) ((a)<(b)?(a):(b))
 #define IJ 1
 
 // NOTE: always return 0
@@ -17,38 +17,56 @@ int pdgeqsvd( char *jobu, char *jobvt, char *eigtype,
               int    *iWork, int liWork, int *info);
 
 
-SEXP R_pdgeqsvd(SEXP JOBU, SEXP JOBVT, SEXP A, SEXP DESCA, SEXP DESCU, SEXP DESCVT)
+SEXP R_pdgeqsvd(SEXP JOBU, SEXP JOBVT, SEXP EIGTYPE, SEXP A, SEXP DESCA, SEXP DESCU, SEXP DESCVT, SEXP LDIM_U, SEXP LDIM_VT)
 {
   SEXP ret, retnames;
   SEXP S, U, VT;
-  int m, n;
-  char jobu, jobvt, eigtype;
   int info = 0;
   double *work;
-  int lwork;
-  int *liwork;
-  int liwork;
+  int *iwork;
+  int lwork, liwork;
   
-  jobu = CHARPT(JOBU, 0)[0];
-  jobvt = CHARPT(JOBVT, 0)[0];
   
+  const char jobu = CHARPT(JOBU, 0)[0];
+  const char jobvt = CHARPT(JOBVT, 0)[0];
+  const char eigtype = CHARPT(EIGTYPE, 0)[0];
+  const int *const restrict desca = INTEGER(DESCA);
+  const int *const restrict descu = INTEGER(DESCU);
+  const int *const restrict descvt = INTEGER(DESCVT);
+  const int m = desca[2];
+  const int n = desca[3];
+  
+  int ptct = 3;
   PROTECT(ret = allocVector(VECSXP, 3));
   PROTECT(retnames = allocVector)
+  PROTECT(S = allocVector(REALSXP, MIN(m, n)));
   
-  PROTECT(S = allocVector(REALSXP, ));
-  PROTECT(U = allocMatrix(REALSXP, , ));
-  PROTECT(VT = allocMatrix(REALSXP, , ));
+  if (jobu == 'V' || jobu == 'v')
+  {
+    PROTECT(U = allocMatrix(REALSXP, INTEGER(LDIM_U)[0], INTEGER(LDIM_U)[1]));
+    ptct++;
+  }
+  else
+    U = R_NilValue;
+  
+  if (jobvt = 'V' || jobvt == 'v')
+  {
+    PROTECT(VT = allocMatrix(REALSXP, INTEGER(LDIM_VT)[0], INTEGER(LDIM_VT)[1]));
+    ptct++;
+  }
+  else
+    VT = R_NilValue;
   
   
-  double work_dbl;
+  double lwork_dbl;
   pdgeqsvd(&jobu, &jobvt, &eigtype, m, n, 
     REAL(A), IJ, IJ, desc,
     S, 
     U, IJ, IJ, descu,
     VT, IJ, IJ, descvt,
-    &work_dbl, -1, &liwork, -1, &info);
+    &lwork_dbl, -1, &liwork, -1, &info);
   
-  lwork = (int) work_dbl;
+  lwork = (int) lwork_dbl;
   work = malloc(lwork * sizeof(*work));
   iwork = malloc(liwork * sizeof(*iwork));
   if (work == NULL || iwork == NULL)
@@ -60,7 +78,7 @@ SEXP R_pdgeqsvd(SEXP JOBU, SEXP JOBVT, SEXP A, SEXP DESCA, SEXP DESCU, SEXP DESC
     SET_VECTOR_ELT(ret, 1, R_NilValue);
     SET_VECTOR_ELT(ret, 2, R_NilValue);
     
-    UNPROTECT(5);
+    UNPROTECT(ptct);
     return ret;
   }
   else
@@ -82,6 +100,9 @@ SEXP R_pdgeqsvd(SEXP JOBU, SEXP JOBVT, SEXP A, SEXP DESCA, SEXP DESCU, SEXP DESC
     VT, IJ, IJ, descvt,
     work, lwork, iwork, liwork, &info);
   
-  UNPROTECT(5);
+  free(work);
+  free(iwork);
+  
+  UNPROTECT(ptct);
   return ret;
 }
