@@ -1,0 +1,15 @@
+*.o
+*.mod
+*.so
+*.log
+*.status
+
+*~
+*.swp
+*.orig
+
+inst/doc/*
+
+src/Makeconf
+src/Makevars
+src/utils/a.out
