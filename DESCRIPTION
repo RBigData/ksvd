@@ -3,7 +3,9 @@ Type: Package
 Title: TODO
 Version: 0.1-0
 Description: TODO
-License: 
+License: BSD 3-clause License + file LICENSE
+Copyright: See ksvd/src/qdwh/LICENSE and ksvd/src/ksvd/LICENSE for included
+    library code.
 Depends:
     R (>= 3.0.0),
     methods,
