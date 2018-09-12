@@ -4,6 +4,7 @@
 #' 
 #' @import methods
 #' @import pbdSLAP
+#' @importFrom pbdBASE base.numroc
 #' @import pbdDMAT
 #' 
 #' @useDynLib ksvd R_pdgeqsvd
