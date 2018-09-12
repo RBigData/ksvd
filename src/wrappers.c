@@ -33,6 +33,7 @@ SEXP R_pdgeqsvd(SEXP JOBU, SEXP JOBVT, SEXP EIGTYPE, SEXP A, SEXP DESCA, SEXP DE
   
   SEXP ret, retnames;
   SEXP S, U, VT;
+  double *a, *u, *vt;
   int info = 0;
   double *work;
   int *iwork;
@@ -50,41 +51,53 @@ SEXP R_pdgeqsvd(SEXP JOBU, SEXP JOBVT, SEXP EIGTYPE, SEXP A, SEXP DESCA, SEXP DE
   
   int ptct = 3;
   PROTECT(ret = allocVector(VECSXP, 3));
-  PROTECT(retnames = allocVector)
+  PROTECT(retnames = allocVector(STRSXP, 3));
   PROTECT(S = allocVector(REALSXP, MIN(m, n)));
+  
   
   if (jobu == 'V' || jobu == 'v')
   {
     PROTECT(U = allocMatrix(REALSXP, INTEGER(LDIM_U)[0], INTEGER(LDIM_U)[1]));
+    u = REAL(U);
     ptct++;
   }
   else
+  {
     U = R_NilValue;
+    u = NULL;
+  }
   
-  if (jobvt = 'V' || jobvt == 'v')
+  if (jobvt == 'V' || jobvt == 'v')
   {
     PROTECT(VT = allocMatrix(REALSXP, INTEGER(LDIM_VT)[0], INTEGER(LDIM_VT)[1]));
+    vt = REAL(VT);
     ptct++;
   }
   else
+  {
     VT = R_NilValue;
-  
+    vt = NULL;
+  }
   
   double lwork_dbl;
   pdgeqsvd(&jobu, &jobvt, &eigtype, m, n, 
-    REAL(A), IJ, IJ, desc,
-    S, 
-    U, IJ, IJ, descu,
-    VT, IJ, IJ, descvt,
+    NULL, IJ, IJ, desca,
+    REAL(S), 
+    u, IJ, IJ, descu,
+    vt, IJ, IJ, descvt,
     &lwork_dbl, -1, &liwork, -1, &info);
   
   lwork = (int) lwork_dbl;
   work = malloc(lwork * sizeof(*work));
   iwork = malloc(liwork * sizeof(*iwork));
-  if (work == NULL || iwork == NULL)
+  const size_t len_a = (size_t) nrows(A)*ncols(A);
+  a = malloc(len_a * sizeof(*a));
+  
+  if (work == NULL || iwork == NULL || a == NULL)
   {
     FREE(work);
     FREE(iwork);
+    FREE(a);
     
     SET_VECTOR_ELT(ret, 0, R_NilValue);
     SET_VECTOR_ELT(ret, 1, R_NilValue);
@@ -105,16 +118,24 @@ SEXP R_pdgeqsvd(SEXP JOBU, SEXP JOBVT, SEXP EIGTYPE, SEXP A, SEXP DESCA, SEXP DE
   SET_STRING_ELT(retnames, 2, mkChar("vt"));
   setAttrib(ret, R_NamesSymbol, retnames);
   
+  memcpy(a, REAL(A), len_a*sizeof(*a));
+  
   pdgeqsvd(&jobu, &jobvt, &eigtype, m, n, 
-    REAL(A), IJ, IJ, desc,
-    S, 
-    U, IJ, IJ, descu,
-    VT, IJ, IJ, descvt,
+    a, IJ, IJ, desca,
+    REAL(S), 
+    u, IJ, IJ, descu,
+    vt, IJ, IJ, descvt,
     work, lwork, iwork, liwork, &info);
+  
+  printf("%d\n", info);
   
   free(work);
   free(iwork);
+  free(a);
   
   UNPROTECT(ptct);
+  if (info != 0)
+    error("pdgeqsvd returned error code %d\n", info);
+  
   return ret;
 }
