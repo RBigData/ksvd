@@ -18,8 +18,19 @@ int pdgeqsvd(const char *const restrict jobu, const char *const restrict jobvt, 
   int    *const restrict iWork, const int liWork, int *const restrict info);
 
 
+void Cblacs_get(int, int, int*);
+void Cblacs_gridinit(int *ConTxt, char *order, int nprow, int npcol);
+
+
 SEXP R_pdgeqsvd(SEXP JOBU, SEXP JOBVT, SEXP EIGTYPE, SEXP A, SEXP DESCA, SEXP DESCU, SEXP DESCVT, SEXP LDIM_U, SEXP LDIM_VT)
 {
+  int ictxt = 0;
+  char order = 'R';
+  Cblacs_get(-1, 0, &ictxt);
+  Cblacs_gridinit(&ictxt, &order, 1, 1);
+  
+  
+  
   SEXP ret, retnames;
   SEXP S, U, VT;
   int info = 0;
