@@ -3,7 +3,6 @@
 #' TODO
 #' 
 #' @import methods
-#' @import pbdMPI
 #' @import pbdSLAP
 #' @import pbdDMAT
 #' 
