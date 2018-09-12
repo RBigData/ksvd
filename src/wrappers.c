@@ -8,14 +8,14 @@
 
 
 // NOTE: always return 0
-int pdgeqsvd( char *jobu, char *jobvt, char *eigtype, 
-              int m, int n, 
-              double *A, int iA, int jA, int *descA, 
-              double *S, 
-              double *U,     int iU,     int jU, int *descU,
-              double *VT,    int iVT,    int jVT, int *descVT,
-              double *Work,  int lWork,
-              int    *iWork, int liWork, int *info);
+int pdgeqsvd(const char *const restrict jobu, const char *const restrict jobvt,  const char *const restrict eigtype, 
+  const int m, const int n, 
+  double *const restrict A, const int iA, const int jA, const int *const restrict descA, 
+  double *const restrict S, 
+  double *const restrict U,     const int iU, const int jU, const int *const restrict descU,
+  double *const restrict VT,    const int iVT, const int jVT, const int *const restrict descVT,
+  double *const restrict Work,  const int lWork,
+  int    *const restrict iWork, const int liWork, int *const restrict info);
 
 
 SEXP R_pdgeqsvd(SEXP JOBU, SEXP JOBVT, SEXP EIGTYPE, SEXP A, SEXP DESCA, SEXP DESCU, SEXP DESCVT, SEXP LDIM_U, SEXP LDIM_VT)
