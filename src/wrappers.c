@@ -2,9 +2,10 @@
 #include <Rinternals.h>
 
 #define CHARPT(x,i) ((char*)CHAR(STRING_ELT(x,i)))
-#define FREE(x) (if(x)free(x))
+#define FREE(x) if(x)free(x)
 #define MIN(a,b) ((a)<(b)?(a):(b))
 #define IJ 1
+
 
 // NOTE: always return 0
 int pdgeqsvd( char *jobu, char *jobvt, char *eigtype, 
