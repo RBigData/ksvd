@@ -10,7 +10,7 @@ PKG_LIBS = $(SLAP_LDFLAGS) $(FLIBS) $(SPMD_LDFLAGS) $(SHLIB_OPENMP_CFLAGS)
 
 KSVD_OBJS = ksvd/pdgeqsvd.o
 QDWH_OBJS = qdwh/pdgenm2.o qdwh/pdgeqdwh.o
-R_OBJS = wrappers.o
+R_OBJS = ksvd_native.o wrappers.o
 
 OBJECTS = $(R_OBJS) $(KSVD_OBJS) $(QDWH_OBJS)
 

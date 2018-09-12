@@ -6,7 +6,7 @@
 #' @import pbdSLAP
 #' @import pbdDMAT
 #' 
-#' @useDynLib ksvd
+#' @useDynLib ksvd R_pdgeqsvd
 #' 
 #' @name ksvd-package
 #' @docType package
