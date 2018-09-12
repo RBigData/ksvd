@@ -30,7 +30,8 @@ rpdgeqsvd = function(jobu, jobvt, eigtype, A, desca, descu, descvt)
   else
     ldim_vt = c(-1L, -1L)
   
+  ldim_u = as.integer(ldim_u)
+  ldim_vt = as.integer(ldim_vt)
   
-  ldim_vt = base.numroc(descvt[3:4], descvt[5:6], ICTXT=descvt[2L])
   .Call("R_pdgeqsvd", jobu, jobvt, eigtype, A, desca, descu, descvt, ldim_u, ldim_vt)
 }
