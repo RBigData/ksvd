@@ -9,6 +9,8 @@
 #' TODO
 #' @param jobvt
 #' TODO
+#' @param eigtype
+#' TODO
 #' @param A
 #' TODO
 #' @param desca,descu,descvt
