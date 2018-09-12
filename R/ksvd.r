@@ -7,7 +7,7 @@
 #' 
 #' @param x
 #' numeric distributed matrix
-#' @param nu 
+#' @param nu
 #' number of left singular vectors to return when calculating singular values.
 #' @param nv 
 #' number of right singular vectors to return when calculating singular values.
@@ -51,7 +51,7 @@ ksvd = function(x,  nu = min(m, n), nv = min(m, n))
   else
   {
     jobvt = 'V'
-    vtdim = c(min_mn, n)
+    dim_vt = c(min_mn, n)
     ldim_vt = pbdBASE::base.numroc(dim=dim_vt, bldim=bldim, ICTXT=ICTXT)
   }
   
@@ -64,7 +64,7 @@ ksvd = function(x,  nu = min(m, n), nv = min(m, n))
   
   if (nu > 0)
   {
-    u = new("ddmatrix", Data=out$u, dim=udim, ldim=uldim, bldim=bldim, ICTXT=ICTXT)
+    u = new("ddmatrix", Data=out$u, dim=dim_u, ldim=ldim_u, bldim=bldim, ICTXT=ICTXT)
     if (nu < u@dim[2L])
       u = u[, 1L:nu]
   }
@@ -73,7 +73,7 @@ ksvd = function(x,  nu = min(m, n), nv = min(m, n))
   
   if (nv > 0)
   {
-    vt = new("ddmatrix", Data=out$vt, dim=vtdim, ldim=vtldim, bldim=bldim, ICTXT=ICTXT)
+    vt = new("ddmatrix", Data=out$vt, dim=dim_vt, ldim=ldim_vt, bldim=bldim, ICTXT=ICTXT)
     if (nv < vt@dim[1L])
       vt = vt[1L:nv, ]
   }
