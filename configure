@@ -2736,7 +2736,7 @@ SPMD_LDFLAGS=`${R_SCMD} "source('./R/get_conf.r');get.conf('PKG_LIBS','"${R_ARCH
 
 # Report
 echo " "
-echo "****************** Results of pbdBASE package configure *****************"
+echo "****************** Results of ksvd package configure *****************"
 echo " "
 echo ">> EXT_LDFLAGS = ${EXT_LDFLAGS}"
 echo ">> R_SLAP = ${R_SLAP}"
@@ -2744,7 +2744,7 @@ echo ">> SLAP_LDFLAGS = ${SLAP_LDFLAGS}"
 echo ">> SPMD_CPPFLAGS = ${SPMD_CPPFLAGS}"
 echo ">> SPMD_LDFLAGS = ${SPMD_LDFLAGS}"
 echo " "
-echo "*************************************************************************"
+echo "**********************************************************************"
 echo " "
 
 
