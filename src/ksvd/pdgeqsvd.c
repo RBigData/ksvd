@@ -319,7 +319,7 @@ int pdgeqsvd( char *jobu, char *jobvt, char *eigtype,
 
            //lwork_cn  = Work[0];
            liwork_cn = n;//(int)iWork[0];
-           if (eigtype[0] == 'r') {
+           if (eigtype[0] == 'r' || eigtype[0] == 'R') {
                pdsyevr_( jobvt, "A", "L", &n, 
                      U, &iU, &jU, descU, 
                      &vl, &vu, &il, &iu, &nbeigvals, &nbeigvecs,
@@ -328,7 +328,7 @@ int pdgeqsvd( char *jobu, char *jobvt, char *eigtype,
                      Work, &lWork, 
                      iWork, &liWork, &iinfo );
            }   
-           else if (eigtype[0] == 'd') {
+           else if (eigtype[0] == 'd' || eigtype[0] == 'D') {
                pdsyevd_( jobvt, "L", &n, 
                      U, &iU, &jU, descU, 
                      S, 
@@ -389,7 +389,7 @@ int pdgeqsvd( char *jobu, char *jobvt, char *eigtype,
         //liwork_cn = (int)iWork[0];
 
 
-        if (eigtype[0] == 'r') {
+        if (eigtype[0] == 'r' || eigtype[0] == 'R') {
             pdsyevr_( jobvt, "A", "L", &n, 
                   U, &iU, &jU, descU, 
                   &vl, &vu, &il, &iu, &nbeigvals, &nbeigvecs,
@@ -398,7 +398,7 @@ int pdgeqsvd( char *jobu, char *jobvt, char *eigtype,
                   Work, &lWork, 
                   iWork, &liWork, &iinfo );
         }   
-        else if (eigtype[0] == 'd') {
+        else if (eigtype[0] == 'd' || eigtype[0] == 'D') {
             pdsyevd_( jobvt, "L", &n, 
                   U, &iU, &jU, descU, 
                   S, 
@@ -426,7 +426,7 @@ int pdgeqsvd( char *jobu, char *jobvt, char *eigtype,
               Work, mlocW,
               &iinfo);
 
-    if (eigtype[0] == 'r'){
+    if (eigtype[0] == 'r' || eigtype[0] == 'R'){
         pdsyevr_( jobvt, "A", "L", &n, 
                    U, &iU, &jU, descU, 
                    &vl, &vu, &il, &iu, &nbeigvals, &nbeigvecs,
@@ -436,7 +436,7 @@ int pdgeqsvd( char *jobu, char *jobvt, char *eigtype,
                    iWork, &liWork, &iinfo );
               
     }
-    else if(eigtype[0] == 'd'){
+    else if(eigtype[0] == 'd' || eigtype[0] == 'D'){
         pdsyevd_( jobvt, "L", &n, 
                   U, &iU, &jU, descU, 
                   S, 
@@ -460,7 +460,7 @@ int pdgeqsvd( char *jobu, char *jobvt, char *eigtype,
   //                                           THIS_REAL_ELPA_KERNEL_API, useQr);
   //   }
 
-    if(jobu[0] == 'V') {
+    if(jobu[0] == 'V' || jobu[0] == 'v') {
         pdgemm_( "N", "N", &n, &n, &n, 
                  &alpha, 
                  A, &iA, &jA, descA, 
