@@ -37,7 +37,7 @@ SEXP R_pdgeqsvd(SEXP JOBU, SEXP JOBVT, SEXP EIGTYPE, SEXP A, SEXP DESCA, SEXP DE
   int info = 0;
   double *work;
   int *iwork;
-  int lwork, liwork;
+  int lwork, liwork = 0;
   
   
   const char jobu = CHARPT(JOBU, 0)[0];
