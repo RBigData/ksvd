@@ -20,8 +20,11 @@ ksvd = function(x,  nu = min(m, n), nv = min(m, n))
 {
   m = nrow(x)
   n = ncol(x)
-  min_mn = min(m, n)
   
+  if (m < n)
+    comm.stop("only m>=n is supported in ksvd()")
+  
+  min_mn = min(m, n)
   bldim = x@bldim
   ICTXT = x@ICTXT
   
@@ -29,37 +32,35 @@ ksvd = function(x,  nu = min(m, n), nv = min(m, n))
   ldim_a = pbdBASE::base.numroc(dim=dim_a, bldim=bldim, ICTXT=ICTXT)
   desca = pbdBASE::base.descinit(dim_a, bldim, ldim_a, ICTXT)
   
+  dim_u = c(m, min_mn)
   if (nu == 0)
   {
     jobu = 'N'
-    dim_u = c(1L, 1L)
     ldim_u = c(-1L, -1L)
   }
   else
   {
     jobu = 'V'
-    dim_u = c(m, min_mn)
     ldim_u = pbdBASE::base.numroc(dim=dim_u, bldim=bldim, ICTXT=ICTXT)
   }
   
+  dim_vt = c(min_mn, n)
   if (nv == 0)
   {
     jobvt = 'N'
-    dim_vt = c(1L, 1L)
     ldim_vt = c(-1L, -1L)
   }
   else
   {
     jobvt = 'V'
-    dim_vt = c(min_mn, n)
     ldim_vt = pbdBASE::base.numroc(dim=dim_vt, bldim=bldim, ICTXT=ICTXT)
   }
   
   descu = pbdBASE::base.descinit(dim_u, bldim, ldim_u, ICTXT)
   descvt = pbdBASE::base.descinit(dim_vt, bldim, ldim_vt, ICTXT)
   
-  
-  out = rpdgeqsvd(jobu, jobvt, eigtype='D', x@Data, desca, descu, descvt)
+  # eigtype: "r", "d"
+  out = rpdgeqsvd(jobu, jobvt, eigtype='d', x@Data, desca, descu, descvt)
   
   
   if (nu > 0)
