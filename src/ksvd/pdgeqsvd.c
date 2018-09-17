@@ -419,7 +419,7 @@ int pdgeqsvd( char *jobu, char *jobvt, char *eigtype,
         return 0;
     }
 
-    pdgeqdwh( "H", n, n,
+    pdgeqdwh( "H", m, n,
               A, iA, jA, descA, // UP 
               U, iU, jU, descU, // H 
               VT, mloc,
