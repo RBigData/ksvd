@@ -302,9 +302,8 @@ int pdgeqsvd( char *jobu, char *jobvt, char *eigtype,
             wantV = 1;
         }
        int i3 = 3, i4 = 4, i5 = 5, i9 = 9, i14 = 14, i18 = 18;
-       int *idum1, *idum2;
-       idum1 = (int *)malloc(3*sizeof(int)) ;
-       idum2 = (int *)malloc(3*sizeof(int)) ;
+       int idum1[3];
+       int idum2[3];
        chk1mat_(&m, &i4, &n, &i5, &iA, &jA, descA, &i9, info);
        if (wantU){
           chk1mat_(&m, &i4, &n, &i5, &iU, &jU, descU, &i14, info);

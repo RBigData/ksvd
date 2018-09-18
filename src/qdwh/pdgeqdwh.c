@@ -245,9 +245,8 @@ int pdgeqdwh( char *jobh, int m, int n,
        }
 
        int i2 = 2, i3 = 3, i7 = 7, i11 = 11;
-       int *idum1, *idum2;
-       idum1 = (int *)malloc(2*sizeof(int)) ;
-       idum2 = (int *)malloc(2*sizeof(int)) ;
+			 int idum1[2];
+			 int idum2[2];
        chk1mat_(&m, &i2, &n, &i3, &iA, &jA, descA, &i7, info);
        if (wantH){
           chk1mat_(&m, &i2, &n, &i3, &iH, &jH, descH, &i11, info);
