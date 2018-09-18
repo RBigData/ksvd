@@ -29,8 +29,8 @@ ksvd = function(x,  nu = min(m, n), nv = min(m, n))
   ICTXT = x@ICTXT
   
   dim_a = dim(x)
-  ldim_a = pbdBASE::base.numroc(dim=dim_a, bldim=bldim, ICTXT=ICTXT)
-  desca = pbdBASE::base.descinit(dim_a, bldim, ldim_a, ICTXT)
+  ldim_a = base.numroc(dim=dim_a, bldim=bldim, ICTXT=ICTXT)
+  desca = base.descinit(dim_a, bldim, ldim_a, ICTXT)
   
   dim_u = c(m, min_mn)
   if (nu == 0)
@@ -41,7 +41,7 @@ ksvd = function(x,  nu = min(m, n), nv = min(m, n))
   else
   {
     jobu = 'V'
-    ldim_u = pbdBASE::base.numroc(dim=dim_u, bldim=bldim, ICTXT=ICTXT)
+    ldim_u = base.numroc(dim=dim_u, bldim=bldim, ICTXT=ICTXT)
   }
   
   dim_vt = c(min_mn, n)
@@ -53,11 +53,11 @@ ksvd = function(x,  nu = min(m, n), nv = min(m, n))
   else
   {
     jobvt = 'V'
-    ldim_vt = pbdBASE::base.numroc(dim=dim_vt, bldim=bldim, ICTXT=ICTXT)
+    ldim_vt = base.numroc(dim=dim_vt, bldim=bldim, ICTXT=ICTXT)
   }
   
-  descu = pbdBASE::base.descinit(dim_u, bldim, ldim_u, ICTXT)
-  descvt = pbdBASE::base.descinit(dim_vt, bldim, ldim_vt, ICTXT)
+  descu = base.descinit(dim_u, bldim, ldim_u, ICTXT)
+  descvt = base.descinit(dim_vt, bldim, ldim_vt, ICTXT)
   
   # eigtype: "r", "d"
   out = rpdgeqsvd(jobu, jobvt, eigtype='d', x@Data, desca, descu, descvt)

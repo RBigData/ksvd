@@ -4,7 +4,8 @@
 #' 
 #' @import methods
 #' @import pbdSLAP
-#' @importFrom pbdBASE base.numroc
+#' @importFrom pbdMPI comm.stop
+#' @importFrom pbdBASE base.numroc base.descinit
 #' @import pbdDMAT
 #' 
 #' @useDynLib ksvd R_pdgeqsvd
