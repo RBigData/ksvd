@@ -575,7 +575,7 @@ int pdgeqdwh( char *jobh, int m, int n,
 
             sync_time_elapsed =- MPI_Wtime();
 
-            pdgemm_( "T", "N", &m, &n, &n, &c, A, &i1, &i1, descA, A, &i1, &i1, 
+            pdgemm_( "T", "N", &n, &n, &m, &c, A, &i1, &i1, descA, A, &i1, &i1, 
                      descA, &beta, H, &i1, &i1, descH);
 
             sync_time_elapsed += MPI_Wtime();

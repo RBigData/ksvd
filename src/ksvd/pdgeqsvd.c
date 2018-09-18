@@ -309,7 +309,7 @@ int pdgeqsvd( char *jobu, char *jobvt, char *eigtype,
           chk1mat_(&m, &i4, &n, &i5, &iU, &jU, descU, &i14, info);
        }
        if (wantV){
-          chk1mat_(&m, &i4, &n, &i5, &iVT, &jVT, descVT, &i18, info);
+          chk1mat_(&n, &i4, &n, &i5, &iVT, &jVT, descVT, &i18, info);
        }
 
        lquery =  (lWork == -1 || liWork == -1); 
@@ -460,7 +460,7 @@ int pdgeqsvd( char *jobu, char *jobvt, char *eigtype,
   //   }
 
     if(jobu[0] == 'V' || jobu[0] == 'v') {
-        pdgemm_( "N", "N", &n, &n, &n, 
+        pdgemm_( "N", "N", &m, &n, &n, 
                  &alpha, 
                  A, &iA, &jA, descA, 
                  VT, &iVT, &jVT, descVT, 
