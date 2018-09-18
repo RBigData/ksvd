@@ -3,6 +3,18 @@
 #include "wrappers.h"
 
 
+static inline void rev_vec(const int len, double *const restrict x)
+{
+  int j = len-1;
+  
+  for (int i=0; i<len/2; i++)
+  {
+    const double tmp = x[i];
+    x[i] = x[j];
+    x[j] = tmp;
+    j--;
+  }
+}
 
 
 
@@ -26,11 +38,12 @@ SEXP R_pdgeqsvd(SEXP JOBU, SEXP JOBVT, SEXP EIGTYPE, SEXP A, SEXP DESCA, SEXP DE
   const int *const restrict descvt = INTEGER(DESCVT);
   const int m = desca[2];
   const int n = desca[3];
+  const int min_mn = MIN(m, n);
   
   int ptct = 3;
   PROTECT(ret = allocVector(VECSXP, 3));
   PROTECT(retnames = allocVector(STRSXP, 3));
-  PROTECT(S = allocVector(REALSXP, MIN(m, n)));
+  PROTECT(S = allocVector(REALSXP, min_mn));
   
   
   if (jobu == 'V' || jobu == 'v')
@@ -105,11 +118,11 @@ SEXP R_pdgeqsvd(SEXP JOBU, SEXP JOBVT, SEXP EIGTYPE, SEXP A, SEXP DESCA, SEXP DE
     vt, IJ, IJ, descvt,
     work, lwork, iwork, liwork, &info);
   
-  printf("%d\n", info);
-  
   free(work);
   free(iwork);
   free(a);
+  
+  rev_vec(min_mn, REAL(S));
   
   UNPROTECT(ptct);
   if (info != 0)

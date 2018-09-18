@@ -1,10 +1,12 @@
 suppressMessages(library(ksvd))
 init.grid()
 
-.pbd_env$bldim = c(2, 2)
+.pbd_env$BLDIM = c(2, 2)
 m = 5
 n = 5
 x = ddmatrix("rnorm", m, n)
+
+x
 
 # ret = ksvd(x, nu=0, nv=0)
 # comm.print(rev(ret$d))
@@ -12,9 +14,9 @@ x = ddmatrix("rnorm", m, n)
 # comm.print(ret$d)
 
 ret = ksvd(x)
-comm.print(rev(ret$d))
+comm.print(head(ret$d))
 ret = La.svd(x, nu=0, nv=0)
-comm.print(ret$d)
+comm.print(head(ret$d))
 
 
 # .pbd_env$bldim = c(64, 64)
