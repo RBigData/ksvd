@@ -35,5 +35,6 @@ rpdgeqsvd = function(jobu, jobvt, eigtype, A, desca, descu, descvt)
   ldim_u = as.integer(ldim_u)
   ldim_vt = as.integer(ldim_vt)
   
+  pbdBASE::set.blacs.apts()
   .Call(R_pdgeqsvd, jobu, jobvt, eigtype, A, desca, descu, descvt, ldim_u, ldim_vt)
 }

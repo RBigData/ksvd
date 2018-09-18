@@ -22,6 +22,7 @@ BugReports: https://group.pbdr.org/
 MailingList: Please send questions and comments regarding pbdR to
     RBigData@gmail.com
 Authors@R: c(person("Drew", "Schmidt", role=c("aut", "cre"), email="wrathematics@gmail.com"),
+    person("Wei-Chen", "Chen", role = "aut"),
     person("ORNL", role = "cph"),
     person("KAUST", role = "cph")
     )
