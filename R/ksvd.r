@@ -20,13 +20,15 @@ ksvd = function(x,  nu = min(m, n), nv = min(m, n))
 {
   m = nrow(x)
   n = ncol(x)
+  min_mn = min(m, n)
   
   if (m < n)
     comm.stop("only m>=n is supported in ksvd()")
   
-  min_mn = min(m, n)
-  bldim = x@bldim
   ICTXT = x@ICTXT
+  bldim = x@bldim
+  if (bldim[1] != bldim[2])
+    comm.stop(paste0("ksvd() requires a square blocking factor; have ", bldim[1L], "x", bldim[2L]))
   
   dim_a = dim(x)
   ldim_a = base.numroc(dim=dim_a, bldim=bldim, ICTXT=ICTXT)
