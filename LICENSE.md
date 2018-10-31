@@ -1,6 +1,4 @@
-Copyright 2017 ORNL
-Copyright 2012-2015 Drew Schmidt
-Copyright 2011-2015: Wei-Chen Chen
+Copyright 2018 ORNL
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
