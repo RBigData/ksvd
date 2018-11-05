@@ -6,7 +6,9 @@
 * **Bug reports**: https://github.com/RBigData/ksvd/issues
 
 
-TODO
+This repository is currently a work in progress. Neither the API nor the internals are stable at this time. Use at your own risk.
+
+R bindings and pbdR integration for the [Kaust SVD (ksvd)](https://github.com/ecrc/ksvd).
 
 
 ## Installation
